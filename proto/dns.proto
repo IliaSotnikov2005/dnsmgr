@@ -22,5 +22,5 @@ message DNSResponse {
 }
 
 message DNSListResponse {
-    repeated DNSResponse ips = 1;
+    repeated string ips = 1;
 }

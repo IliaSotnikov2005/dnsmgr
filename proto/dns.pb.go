@@ -120,7 +120,7 @@ func (x *DNSResponse) GetMessage() string {
 
 type DNSListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ips           []*DNSResponse         `protobuf:"bytes,1,rep,name=ips,proto3" json:"ips,omitempty"`
+	Ips           []string               `protobuf:"bytes,1,rep,name=ips,proto3" json:"ips,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -155,7 +155,7 @@ func (*DNSListResponse) Descriptor() ([]byte, []int) {
 	return file_dns_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *DNSListResponse) GetIps() []*DNSResponse {
+func (x *DNSListResponse) GetIps() []string {
 	if x != nil {
 		return x.Ips
 	}
@@ -172,9 +172,9 @@ const file_dns_proto_rawDesc = "" +
 	"\x02ip\x18\x01 \x01(\tR\x02ip\"7\n" +
 	"\vDNSResponse\x12\x0e\n" +
 	"\x02ip\x18\x01 \x01(\tR\x02ip\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"8\n" +
-	"\x0fDNSListResponse\x12%\n" +
-	"\x03ips\x18\x01 \x03(\v2\x13.dnsmgr.DNSResponseR\x03ips2\xb1\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"#\n" +
+	"\x0fDNSListResponse\x12\x10\n" +
+	"\x03ips\x18\x01 \x03(\tR\x03ips2\xb1\x01\n" +
 	"\n" +
 	"DNSService\x121\n" +
 	"\x06AddDNS\x12\x12.dnsmgr.DNSRequest\x1a\x13.dnsmgr.DNSResponse\x124\n" +
@@ -201,18 +201,17 @@ var file_dns_proto_goTypes = []any{
 	(*emptypb.Empty)(nil),   // 3: google.protobuf.Empty
 }
 var file_dns_proto_depIdxs = []int32{
-	1, // 0: dnsmgr.DNSListResponse.ips:type_name -> dnsmgr.DNSResponse
-	0, // 1: dnsmgr.DNSService.AddDNS:input_type -> dnsmgr.DNSRequest
-	0, // 2: dnsmgr.DNSService.RemoveDNS:input_type -> dnsmgr.DNSRequest
-	3, // 3: dnsmgr.DNSService.ListDNS:input_type -> google.protobuf.Empty
-	1, // 4: dnsmgr.DNSService.AddDNS:output_type -> dnsmgr.DNSResponse
-	1, // 5: dnsmgr.DNSService.RemoveDNS:output_type -> dnsmgr.DNSResponse
-	2, // 6: dnsmgr.DNSService.ListDNS:output_type -> dnsmgr.DNSListResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: dnsmgr.DNSService.AddDNS:input_type -> dnsmgr.DNSRequest
+	0, // 1: dnsmgr.DNSService.RemoveDNS:input_type -> dnsmgr.DNSRequest
+	3, // 2: dnsmgr.DNSService.ListDNS:input_type -> google.protobuf.Empty
+	1, // 3: dnsmgr.DNSService.AddDNS:output_type -> dnsmgr.DNSResponse
+	1, // 4: dnsmgr.DNSService.RemoveDNS:output_type -> dnsmgr.DNSResponse
+	2, // 5: dnsmgr.DNSService.ListDNS:output_type -> dnsmgr.DNSListResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_dns_proto_init() }
