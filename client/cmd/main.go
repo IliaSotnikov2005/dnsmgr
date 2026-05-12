@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/IliaSotnikov2005/dnsmgr/client/internal/adapter/grpc"
+	grpcclient "github.com/IliaSotnikov2005/dnsmgr/client/internal/adapter/grpc"
 	"github.com/IliaSotnikov2005/dnsmgr/client/internal/domain"
 	"github.com/IliaSotnikov2005/dnsmgr/client/internal/usecase"
 	"github.com/IliaSotnikov2005/dnsmgr/proto"
@@ -50,7 +50,11 @@ func main() {
 		log.Error("failed to connect to the server", "error", err)
 		os.Exit(1)
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Error("failed to close the connection", "error", err)
+		}
+	}()
 
 	grpcClient := proto.NewDNSServiceClient(conn)
 	adapter := grpcclient.NewClient(grpcClient)

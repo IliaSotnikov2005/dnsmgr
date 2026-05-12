@@ -29,7 +29,11 @@ func (f *FileRepository) Get(ctx context.Context) ([]domain.DNS, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			f.log.Error("failed to close the file", "error", err)
+		}
+	}()
 
 	list := []domain.DNS{}
 	scanner := bufio.NewScanner(file)
@@ -58,7 +62,11 @@ func (f *FileRepository) Save(ctx context.Context, dnsList []domain.DNS) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file for writing: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			f.log.Error("failed to close the file", "error", err)
+		}
+	}()
 
 	writer := bufio.NewWriter(file)
 	for _, d := range dnsList {
