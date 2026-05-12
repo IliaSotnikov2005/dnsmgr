@@ -69,9 +69,7 @@ func (c *Client) List(ctx context.Context) ([]string, error) {
 	}
 
 	dnsList := make([]string, 0, len(res.Ips))
-	for _, dnsIp := range res.Ips {
-		dnsList = append(dnsList, dnsIp)
-	}
+	dnsList = append(dnsList, res.Ips...)
 
 	return dnsList, nil
 }

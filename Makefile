@@ -13,4 +13,10 @@ generate:
 clean:
 	rm -f $(PROTO_DIR)/*.pb.go
 
-.PHONY: all generate clean
+lint:
+	golangci-lint run ./...
+
+test:
+	go test -v -race ./...
+
+.PHONY: all generate clean lint test
