@@ -11,7 +11,6 @@ import (
 )
 
 type Config struct {
-	Env         string
 	StoragePath string
 	GRPC        GRPCConfig
 }
@@ -33,7 +32,6 @@ func Load() (*Config, error) {
 	}
 
 	var rawCfg struct {
-		Env         string `yaml:"env" env-default:"local"`
 		StoragePath string `yaml:"storage_path" env-required:"true"`
 		GRPC        struct {
 			Port            string `yaml:"port" env-default:"50051"`
@@ -46,7 +44,6 @@ func Load() (*Config, error) {
 	}
 
 	cfg := Config{
-		Env:         rawCfg.Env,
 		StoragePath: rawCfg.StoragePath,
 		GRPC: GRPCConfig{
 			Port:    rawCfg.GRPC.Port,
