@@ -31,18 +31,16 @@ func (h *DNSHandler) AddDNS(ctx context.Context, req *proto.DNSRequest) (*proto.
 	h.log.Info("Received AddDNS request", "ip", req.GetIp())
 	res, err := h.useCase.Add(ctx, req.GetIp())
 	if err != nil {
+		h.log.Error("failed to add dns", "err", err)
+
 		if errors.Is(err, domain.ErrAlreadyExists) {
-			return &proto.DNSResponse{
-				Ip:      req.GetIp(),
-				Message: err.Error(),
-			}, nil
+			return nil, status.Error(codes.AlreadyExists, err.Error())
 		}
 
 		if errors.Is(err, domain.ErrInvalidIP) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 
-		h.log.Error("failed to add dns", "err", err)
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -57,17 +55,14 @@ func (h *DNSHandler) RemoveDNS(ctx context.Context, req *proto.DNSRequest) (*pro
 	h.log.Info("Received RemoveDNS request", "ip", req.GetIp())
 	res, err := h.useCase.Remove(ctx, req.GetIp())
 	if err != nil {
+		h.log.Error("failed to remove dns", "err", err)
 		if errors.Is(err, domain.ErrNotFound) {
-			return &proto.DNSResponse{
-				Ip:      req.GetIp(),
-				Message: err.Error(),
-			}, nil
+			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		if errors.Is(err, domain.ErrInvalidIP) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 
-		h.log.Error("failed to remove dns", "err", err)
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
