@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package dnsmgr;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/IliaSotnikov2005/dnsmrg/proto";
+
+service DNSService {
+    rpc AddDNS(DNSRequest) returns (DNSResponse);
+    rpc RemoveDNS(DNSRequest) returns (DNSResponse);
+    rpc ListDNS(google.protobuf.Empty) returns (DNSListResponse);
+}
+
+message DNSRequest {
+    string ip = 1;
+}
+
+message DNSResponse {
+    string ip = 1;
+    string message = 2;
+}
+
+message DNSListResponse {
+    repeated DNSResponse ips = 1;
+}
