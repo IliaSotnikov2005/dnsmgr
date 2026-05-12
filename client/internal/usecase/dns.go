@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"strings"
@@ -14,54 +13,30 @@ import (
 type DNSUseCase struct {
 	log     *slog.Logger
 	service DNSService
-	output  io.Writer
 }
 
-func NewDNSUseCase(log *slog.Logger, service DNSService, output io.Writer) *DNSUseCase {
-	return &DNSUseCase{log: log, service: service, output: output}
+func NewDNSUseCase(log *slog.Logger, service DNSService) *DNSUseCase {
+	return &DNSUseCase{log: log, service: service}
 }
 
-func (uc *DNSUseCase) Add(ctx context.Context, ip string) {
+func (uc *DNSUseCase) Add(ctx context.Context, ip string) (domain.DNS, error) {
 	if err := uc.validateIP(ip); err != nil {
-		fmt.Fprintf(uc.output, "Validation failed: %v\n", err)
-		return
+		return domain.DNS{}, err
 	}
 
-	ucDns, err := uc.service.Add(ctx, ip)
-	if err != nil {
-		fmt.Fprintf(uc.output, "Failed to add DNS %s: %s\n", ip, err.Error())
-		return
-	}
-
-	fmt.Fprintf(uc.output, "DNS %s succesfully added\n", ucDns.Ip)
+	return uc.service.Add(ctx, ip)
 }
 
-func (uc *DNSUseCase) Remove(ctx context.Context, ip string) {
+func (uc *DNSUseCase) Remove(ctx context.Context, ip string) (domain.DNS, error) {
 	if err := uc.validateIP(ip); err != nil {
-		fmt.Fprintf(uc.output, "Validation failed: %v\n", err)
-		return
+		return domain.DNS{}, err
 	}
 
-	ucDns, err := uc.service.Remove(ctx, ip)
-	if err != nil {
-		fmt.Fprintf(uc.output, "Failed to remove DNS %s: %s\n", ip, err.Error())
-		return
-	}
-
-	fmt.Fprintf(uc.output, "DNS %s succesfully removed\n", ucDns.Ip)
+	return uc.service.Remove(ctx, ip)
 }
 
-func (uc *DNSUseCase) List(ctx context.Context) {
-	dnsList, err := uc.service.List(ctx)
-	if err != nil {
-		fmt.Fprintf(uc.output, "Failed to list DNS: %s\n", err.Error())
-		return
-	}
-
-	fmt.Fprintln(uc.output, "DNS list:")
-	for _, dns := range dnsList {
-		fmt.Fprintln(uc.output, dns)
-	}
+func (uc *DNSUseCase) List(ctx context.Context) ([]string, error) {
+	return uc.service.List(ctx)
 }
 
 func (u *DNSUseCase) validateIP(ip string) error {

@@ -57,7 +57,7 @@ func (u *DNSUseCase) Remove(ctx context.Context, ip string) (domain.DNS, error) 
 		return domain.DNS{}, fmt.Errorf("failed to get DNS list: %w", err)
 	}
 
-	var newList []domain.DNS
+	newList := []domain.DNS{}
 	var found bool
 	for _, d := range list {
 		if d.IP == ip {
@@ -68,7 +68,7 @@ func (u *DNSUseCase) Remove(ctx context.Context, ip string) (domain.DNS, error) 
 	}
 
 	if !found {
-		return domain.DNS{IP: ip}, domain.ErrNotFound
+		return domain.DNS{}, domain.ErrNotFound
 	}
 
 	if err := u.repo.Save(ctx, newList); err != nil {

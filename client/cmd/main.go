@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/IliaSotnikov2005/dnsmgr/client/internal/adapter/grpc"
+	"github.com/IliaSotnikov2005/dnsmgr/client/internal/domain"
 	"github.com/IliaSotnikov2005/dnsmgr/client/internal/usecase"
 	"github.com/IliaSotnikov2005/dnsmgr/proto"
 	"google.golang.org/grpc"
@@ -43,6 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	var err error
 	conn, err := grpc.NewClient(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error("failed to connect to the server", "error", err)
@@ -52,18 +54,39 @@ func main() {
 
 	grpcClient := proto.NewDNSServiceClient(conn)
 	adapter := grpcclient.NewClient(grpcClient)
-	uc := usecase.NewDNSUseCase(log, adapter, os.Stdout)
+
+	uc := usecase.NewDNSUseCase(log, adapter)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	switch {
 	case *addIP != "":
-		uc.Add(ctx, *addIP)
+		var res domain.DNS
+		res, err = uc.Add(ctx, *addIP)
+		if err == nil {
+			fmt.Printf("DNS %s successfully added\n", res.Ip)
+		}
 	case *removeIP != "":
-		uc.Remove(ctx, *removeIP)
+		var res domain.DNS
+		res, err = uc.Remove(ctx, *removeIP)
+		if err == nil {
+			fmt.Printf("DNS %s successfully removed\n", res.Ip)
+		}
 	case *listAll:
-		uc.List(ctx)
+		var list []string
+		list, err = uc.List(ctx)
+		if err == nil {
+			fmt.Println("DNS list:")
+			for _, ip := range list {
+				fmt.Println(ip)
+			}
+		}
 	default:
 		flag.Usage()
+	}
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
 	}
 }

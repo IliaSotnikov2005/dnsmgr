@@ -31,7 +31,7 @@ func (f *FileRepository) Get(ctx context.Context) ([]domain.DNS, error) {
 	}
 	defer file.Close()
 
-	var list []domain.DNS
+	list := []domain.DNS{}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
