@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
+	"strings"
+
+	"github.com/IliaSotnikov2005/dnsmgr/client/internal/domain"
 )
 
 type DNSUseCase struct {
@@ -19,6 +23,11 @@ func NewDNSUseCase(log *slog.Logger, service DNSService, output io.Writer) *DNSU
 }
 
 func (uc *DNSUseCase) Add(ctx context.Context, ip string) {
+	if err := uc.validateIP(ip); err != nil {
+		fmt.Printf("Validation failed: %v\n", err)
+		return
+	}
+
 	ucDns, err := uc.service.Add(ctx, ip)
 	if err != nil {
 		fmt.Fprintf(uc.output, "Failed to add DNS %s: %s\n", ip, err.Error())
@@ -29,6 +38,11 @@ func (uc *DNSUseCase) Add(ctx context.Context, ip string) {
 }
 
 func (uc *DNSUseCase) Remove(ctx context.Context, ip string) {
+	if err := uc.validateIP(ip); err != nil {
+		fmt.Printf("Validation failed: %v\n", err)
+		return
+	}
+
 	ucDns, err := uc.service.Remove(ctx, ip)
 	if err != nil {
 		uc.log.Error("failed to remove dns", "ip", ucDns.Ip, "err", err)
@@ -51,4 +65,18 @@ func (uc *DNSUseCase) List(ctx context.Context) {
 	for _, dns := range dnsList {
 		fmt.Fprintln(uc.output, dns)
 	}
+}
+
+func (u *DNSUseCase) validateIP(ip string) error {
+	ip = strings.TrimSpace(ip)
+
+	if ip == "" {
+		return fmt.Errorf("IP address cannot be empty")
+	}
+
+	if net.ParseIP(ip) == nil {
+		return domain.ErrInvalidIP
+	}
+
+	return nil
 }
