@@ -1,0 +1,5 @@
+env: "local"
+storage_path: "/etc/resolv.conf"
+grpc:
+  port: "50051"
+  timeout_seconds: 5

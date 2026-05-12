@@ -12,11 +12,11 @@ import (
 )
 
 type FileRepository struct {
-	log  slog.Logger
+	log  *slog.Logger
 	path string
 }
 
-func NewFileRepository(log slog.Logger, path string) *FileRepository {
+func NewFileRepository(log *slog.Logger, path string) *FileRepository {
 	return &FileRepository{
 		log:  log,
 		path: path,
