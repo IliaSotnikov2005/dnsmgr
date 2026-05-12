@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"net"
-	"os"
 	"strings"
 
 	"github.com/IliaSotnikov2005/dnsmgr/client/internal/domain"
@@ -24,7 +23,7 @@ func NewDNSUseCase(log *slog.Logger, service DNSService, output io.Writer) *DNSU
 
 func (uc *DNSUseCase) Add(ctx context.Context, ip string) {
 	if err := uc.validateIP(ip); err != nil {
-		fmt.Printf("Validation failed: %v\n", err)
+		fmt.Fprintf(uc.output, "Validation failed: %v\n", err)
 		return
 	}
 
@@ -39,14 +38,13 @@ func (uc *DNSUseCase) Add(ctx context.Context, ip string) {
 
 func (uc *DNSUseCase) Remove(ctx context.Context, ip string) {
 	if err := uc.validateIP(ip); err != nil {
-		fmt.Printf("Validation failed: %v\n", err)
+		fmt.Fprintf(uc.output, "Validation failed: %v\n", err)
 		return
 	}
 
 	ucDns, err := uc.service.Remove(ctx, ip)
 	if err != nil {
-		uc.log.Error("failed to remove dns", "ip", ucDns.Ip, "err", err)
-		fmt.Fprintf(os.Stderr, "Failed to remove DNS %s: %s\n", ucDns.Ip, err.Error())
+		fmt.Fprintf(uc.output, "Failed to remove DNS %s: %s\n", ip, err.Error())
 		return
 	}
 
@@ -56,8 +54,7 @@ func (uc *DNSUseCase) Remove(ctx context.Context, ip string) {
 func (uc *DNSUseCase) List(ctx context.Context) {
 	dnsList, err := uc.service.List(ctx)
 	if err != nil {
-		uc.log.Error("failed to list dns", "err", err)
-		fmt.Fprintf(os.Stderr, "Failed to list DNS: %s\n", err.Error())
+		fmt.Fprintf(uc.output, "Failed to list DNS: %s\n", err.Error())
 		return
 	}
 
