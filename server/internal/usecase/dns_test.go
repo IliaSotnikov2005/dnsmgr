@@ -33,6 +33,11 @@ func (m *DNSRepositoryMock) Save(ctx context.Context, dns []domain.DNS) error {
 	return args.Error(0)
 }
 
+func (m *DNSRepositoryMock) Update(ctx context.Context, fn func([]domain.DNS) ([]domain.DNS, error)) error {
+	args := m.Called(ctx, fn)
+	return args.Error(0)
+}
+
 func TestDNSUseCase_Add(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
@@ -48,9 +53,9 @@ func TestDNSUseCase_Add(t *testing.T) {
 			name:    "Success: Valid IP added",
 			inputIP: "1.1.1.1",
 			mockBehavior: func(m *DNSRepositoryMock) {
-				m.On("Get", mock.Anything).Return([]domain.DNS{{IP: "8.8.8.8"}}, nil)
-				m.On("Save", mock.Anything, mock.MatchedBy(func(list []domain.DNS) bool {
-					return len(list) == 2 && list[1].IP == "1.1.1.1"
+				m.On("Update", mock.Anything, mock.MatchedBy(func(fn func([]domain.DNS) ([]domain.DNS, error)) bool {
+					result, err := fn([]domain.DNS{{IP: "8.8.8.8"}})
+					return err == nil && len(result) == 2 && result[1].IP == "1.1.1.1"
 				})).Return(nil)
 			},
 			wantErr: nil,
@@ -66,15 +71,18 @@ func TestDNSUseCase_Add(t *testing.T) {
 			name:    "Fail: IP already exists",
 			inputIP: "8.8.8.8",
 			mockBehavior: func(m *DNSRepositoryMock) {
-				m.On("Get", mock.Anything).Return([]domain.DNS{{IP: "8.8.8.8"}}, nil)
+				m.On("Update", mock.Anything, mock.MatchedBy(func(fn func([]domain.DNS) ([]domain.DNS, error)) bool {
+					_, err := fn([]domain.DNS{{IP: "8.8.8.8"}})
+					return errors.Is(err, domain.ErrAlreadyExists)
+				})).Return(domain.ErrAlreadyExists)
 			},
 			wantErr: domain.ErrAlreadyExists,
 		},
 		{
-			name:    "Fail: Repository Get error",
+			name:    "Fail: Repository Update error",
 			inputIP: "1.2.3.4",
 			mockBehavior: func(m *DNSRepositoryMock) {
-				m.On("Get", mock.Anything).Return(nil, errors.New("disk failure"))
+				m.On("Update", mock.Anything, mock.Anything).Return(errors.New("disk failure"))
 			},
 			wantErr: errors.New("disk failure"),
 		},
@@ -112,9 +120,10 @@ func TestDNSUseCase_Remove(t *testing.T) {
 			name:       "Success: IP removed",
 			ipToRemove: "8.8.8.8",
 			mockBehavior: func(m *DNSRepositoryMock) {
-				existing := []domain.DNS{{IP: "8.8.8.8"}, {IP: "1.1.1.1"}}
-				m.On("Get", mock.Anything).Return(existing, nil)
-				m.On("Save", mock.Anything, []domain.DNS{{IP: "1.1.1.1"}}).Return(nil)
+				m.On("Update", mock.Anything, mock.MatchedBy(func(fn func([]domain.DNS) ([]domain.DNS, error)) bool {
+					result, err := fn([]domain.DNS{{IP: "8.8.8.8"}, {IP: "1.1.1.1"}})
+					return err == nil && len(result) == 1 && result[0].IP == "1.1.1.1"
+				})).Return(nil)
 			},
 			wantErr: nil,
 		},
@@ -122,27 +131,20 @@ func TestDNSUseCase_Remove(t *testing.T) {
 			name:       "Fail: IP not found",
 			ipToRemove: "1.2.3.4",
 			mockBehavior: func(m *DNSRepositoryMock) {
-				existing := []domain.DNS{{IP: "8.8.8.8"}}
-				m.On("Get", mock.Anything).Return(existing, nil)
+				m.On("Update", mock.Anything, mock.MatchedBy(func(fn func([]domain.DNS) ([]domain.DNS, error)) bool {
+					_, err := fn([]domain.DNS{{IP: "8.8.8.8"}})
+					return errors.Is(err, domain.ErrNotFound)
+				})).Return(domain.ErrNotFound)
 			},
 			wantErr: domain.ErrNotFound,
 		},
 		{
-			name:       "Fail: Repository Save error",
+			name:       "Fail: Repository Update error",
 			ipToRemove: "8.8.8.8",
 			mockBehavior: func(m *DNSRepositoryMock) {
-				m.On("Get", mock.Anything).Return([]domain.DNS{{IP: "8.8.8.8"}}, nil)
-				m.On("Save", mock.Anything, []domain.DNS{}).Return(errors.New("write error"))
+				m.On("Update", mock.Anything, mock.Anything).Return(errors.New("write error"))
 			},
 			wantErr: errors.New("write error"),
-		},
-		{
-			name:       "Fail Repository Get error",
-			ipToRemove: "1.1.1.1",
-			mockBehavior: func(m *DNSRepositoryMock) {
-				m.On("Get", mock.Anything).Return(nil, errors.New("read error"))
-			},
-			wantErr: errors.New("read error"),
 		},
 	}
 
