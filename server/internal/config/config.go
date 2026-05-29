@@ -3,7 +3,6 @@ package config
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -34,20 +33,20 @@ func Load() (*Config, error) {
 	var rawCfg struct {
 		StoragePath string `yaml:"storage_path" env-required:"true"`
 		GRPC        struct {
-			Port            string `yaml:"port" env-default:"50051"`
-			Timeout_seconds int    `yaml:"timeout_seconds" env-default:"5"`
+			Port           string `yaml:"port" env-default:"50051"`
+			TimeoutSeconds int    `yaml:"timeout_seconds" env-default:"5"`
 		} `yaml:"grpc"`
 	}
 
 	if err := cleanenv.ReadConfig(path, &rawCfg); err != nil {
-		log.Fatalf("cannot read config: %s", err)
+		return nil, fmt.Errorf("cannot read config: %s", err)
 	}
 
 	cfg := Config{
 		StoragePath: rawCfg.StoragePath,
 		GRPC: GRPCConfig{
 			Port:    rawCfg.GRPC.Port,
-			Timeout: time.Duration(rawCfg.GRPC.Timeout_seconds) * time.Second,
+			Timeout: time.Duration(rawCfg.GRPC.TimeoutSeconds) * time.Second,
 		},
 	}
 
