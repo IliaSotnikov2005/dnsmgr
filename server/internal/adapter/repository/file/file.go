@@ -135,9 +135,13 @@ func (f *FileRepository) saveToFile(dnsList []domain.DNS) error {
 	tmpPath := tmpFile.Name()
 
 	defer func() {
-		tmpFile.Close()
+		if err := tmpFile.Close(); err != nil {
+			f.log.Error("failed to close temp file", "error", err)
+		}
 
-		os.Remove(tmpPath)
+		if err := os.Remove(tmpPath); err != nil {
+			f.log.Error("failed to remove temp file", "error", err)
+		}
 	}()
 
 	writer := bufio.NewWriter(tmpFile)
