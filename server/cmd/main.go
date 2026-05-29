@@ -12,7 +12,7 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load config: %w", err)
+		fmt.Fprintf(os.Stderr, "failed to load config: %s", err)
 		os.Exit(1)
 	}
 
