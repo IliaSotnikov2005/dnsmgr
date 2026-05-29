@@ -52,6 +52,46 @@ func (f *FileRepository) Get(ctx context.Context) ([]domain.DNS, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
+	return f.readFromFile()
+}
+
+func (f *FileRepository) Save(ctx context.Context, dnsList []domain.DNS) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return f.saveToFile(dnsList)
+}
+
+func (f *FileRepository) Update(ctx context.Context, fn func([]domain.DNS) ([]domain.DNS, error)) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	currentList, err := f.readFromFile()
+	if err != nil {
+		return err
+	}
+
+	newList, err := fn(currentList)
+	if err != nil {
+		return err
+	}
+
+	return f.saveToFile(newList)
+}
+
+func (f *FileRepository) readFromFile() ([]domain.DNS, error) {
 	f.log.Info("Getting DNS list from file", "path", f.path)
 	file, err := os.Open(f.path)
 	if err != nil {
@@ -84,16 +124,7 @@ func (f *FileRepository) Get(ctx context.Context) ([]domain.DNS, error) {
 	return list, nil
 }
 
-func (f *FileRepository) Save(ctx context.Context, dnsList []domain.DNS) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-	}
-
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
+func (f *FileRepository) saveToFile(dnsList []domain.DNS) error {
 	f.log.Info("Saving DNS list to file", "path", f.path)
 
 	dir := filepath.Dir(f.path)

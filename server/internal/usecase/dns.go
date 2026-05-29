@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net"
 
@@ -27,19 +26,16 @@ func (u *DNSUseCase) Add(ctx context.Context, ip string) (domain.DNS, error) {
 		return domain.DNS{}, domain.ErrInvalidIP
 	}
 
-	list, err := u.repo.Get(ctx)
-	if err != nil {
-		return domain.DNS{}, fmt.Errorf("failed to get DNS list: %w", err)
-	}
-
-	for _, d := range list {
-		if d.IP == ip {
-			return domain.DNS{IP: ip}, domain.ErrAlreadyExists
+	err := u.repo.Update(ctx, func(list []domain.DNS) ([]domain.DNS, error) {
+		for _, d := range list {
+			if d.IP == ip {
+				return nil, domain.ErrAlreadyExists
+			}
 		}
-	}
 
-	list = append(list, domain.DNS{IP: ip})
-	if err := u.repo.Save(ctx, list); err != nil {
+		return append(list, domain.DNS{IP: ip}), nil
+	})
+	if err != nil {
 		return domain.DNS{}, err
 	}
 
@@ -52,26 +48,24 @@ func (u *DNSUseCase) Remove(ctx context.Context, ip string) (domain.DNS, error) 
 		return domain.DNS{}, domain.ErrInvalidIP
 	}
 
-	list, err := u.repo.Get(ctx)
-	if err != nil {
-		return domain.DNS{}, fmt.Errorf("failed to get DNS list: %w", err)
-	}
-
-	newList := []domain.DNS{}
-	var found bool
-	for _, d := range list {
-		if d.IP == ip {
-			found = true
-			continue
+	err := u.repo.Update(ctx, func(list []domain.DNS) ([]domain.DNS, error) {
+		newList := []domain.DNS{}
+		found := false
+		for _, d := range list {
+			if d.IP == ip {
+				found = true
+				continue
+			}
+			newList = append(newList, d)
 		}
-		newList = append(newList, d)
-	}
 
-	if !found {
-		return domain.DNS{}, domain.ErrNotFound
-	}
+		if !found {
+			return []domain.DNS{}, domain.ErrNotFound
+		}
 
-	if err := u.repo.Save(ctx, newList); err != nil {
+		return newList, nil
+	})
+	if err != nil {
 		return domain.DNS{}, err
 	}
 
